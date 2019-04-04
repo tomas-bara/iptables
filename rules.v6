@@ -1,0 +1,107 @@
+###############################################################################
+# TABLE: FILTER                                                               #
+###############################################################################
+
+*filter
+
+# BASE POLICY =================================================================
+
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+
+# CHAIN: LOGING ===============================================================
+
+# LOGING
+-N LOGING
+-A LOGING -j LOG --log-prefix "ip6tables: "
+
+# CHAIN: INPUT ================================================================
+
+# Accept all on loopback
+-A INPUT -i lo -j ACCEPT
+
+# Accept already established
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+# Drop invalid
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+
+# Drop remote packets claiming to be from a loopback
+-A INPUT -s ::1/128 ! -i lo -j DROP
+
+# Accept ICMP
+-A INPUT -p ipv6-icmp --icmpv6-type 1 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 2 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 3 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 4 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 128 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 133 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 134 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 135 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 136 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 137 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 141 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 142 -j ACCEPT
+-A INPUT -s fe80::/10 -p ipv6-icmp --icmpv6-type 130 -j ACCEPT
+-A INPUT -s fe80::/10 -p ipv6-icmp --icmpv6-type 131 -j ACCEPT
+-A INPUT -s fe80::/10 -p ipv6-icmp --icmpv6-type 132 -j ACCEPT
+-A INPUT -s fe80::/10 -p ipv6-icmp --icmpv6-type 143 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 148 -j ACCEPT
+-A INPUT -p ipv6-icmp --icmpv6-type 149 -j ACCEPT
+-A INPUT -s fe80::/10 -p ipv6-icmp --icmpv6-type 151 -j ACCEPT
+-A INPUT -s fe80::/10 -p ipv6-icmp --icmpv6-type 152 -j ACCEPT
+-A INPUT -s fe80::/10 -p ipv6-icmp --icmpv6-type 153 -j ACCEPT
+
+# Sample: Accept TCP
+-A INPUT -i eth0 -p tcp --dport 8080 --syn -m conntrack --ctstate NEW -j ACCEPT
+
+# Sample: Accept UDP
+-A INPUT -i eth0 -p udp --dport 8080 -m conntrack --ctstate -j ACCEPT
+
+# Log
+-A INPUT -j LOGING
+
+# CHAIN: FORWARD ==============================================================
+
+# Accept established
+-A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+# Accept ICMP
+-A FORWARD -p ipv6-icmp --icmpv6-type 1 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 2 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 3 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 4 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 128 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 133 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 134 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 135 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 136 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 137 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 141 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 142 -j ACCEPT
+-A FORWARD -s fe80::/10 -p ipv6-icmp --icmpv6-type 130 -j ACCEPT
+-A FORWARD -s fe80::/10 -p ipv6-icmp --icmpv6-type 131 -j ACCEPT
+-A FORWARD -s fe80::/10 -p ipv6-icmp --icmpv6-type 132 -j ACCEPT
+-A FORWARD -s fe80::/10 -p ipv6-icmp --icmpv6-type 143 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 148 -j ACCEPT
+-A FORWARD -p ipv6-icmp --icmpv6-type 149 -j ACCEPT
+-A FORWARD -s fe80::/10 -p ipv6-icmp --icmpv6-type 151 -j ACCEPT
+-A FORWARD -s fe80::/10 -p ipv6-icmp --icmpv6-type 152 -j ACCEPT
+-A FORWARD -s fe80::/10 -p ipv6-icmp --icmpv6-type 153 -j ACCEPT
+
+# Sample: Accept from lan to wan
+-A FORWARD -i eth1 -o eth0 -j ACCEPT
+
+# Log
+-A FORWARD -j LOGING
+
+# CHAIN: OUTPUT ==============================================================
+
+# TODO
+
+# COMMIT ======================================================================
+
+COMMIT
+
+###############################################################################

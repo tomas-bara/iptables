@@ -1,0 +1,97 @@
+###############################################################################
+# TABLE: FILTER                                                               #
+###############################################################################
+
+*filter
+
+# BASE POLICY =================================================================
+
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+
+# CHAIN: LOGING ===============================================================
+
+# LOGING
+-N LOGING
+-A LOGING -j LOG --log-prefix "iptables: "
+
+# CHAIN: INPUT ================================================================
+
+# Accept on loopback
+-A INPUT -i lo -j ACCEPT
+
+# Accept established
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+# Drop invalid
+-A INPUT -m conntrack --ctstate INVALID -j DROP
+
+# Drop remote packets claiming to be from a loopback
+-A INPUT -s 127.0.0.0/8 ! -i lo -j DROP
+
+# Accept ICMP
+-A INPUT -p icmp --icmp-type 0 -m conntrack --ctstate NEW -j ACCEPT
+-A INPUT -p icmp --icmp-type 3 -m conntrack --ctstate NEW -j ACCEPT
+-A INPUT -p icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
+-A INPUT -p icmp --icmp-type 11 -m conntrack --ctstate NEW -j ACCEPT
+
+# Sample: Accept TCP
+-A INPUT -i eth0 -p tcp --dport 8080 --syn -m conntrack --ctstate NEW -j ACCEPT
+
+# Sample: Accept UDP
+-A INPUT -i eth0 -p udp --dport 8080 -m conntrack --ctstate -j ACCEPT
+
+# Log
+-A INPUT -j LOGING
+
+# CHAIN: FORWARD ==============================================================
+
+# Accept established
+-A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+# Sample: Accept from lan to wan
+-A FORWARD -i eth1 -o eth0 -j ACCEPT
+
+# Sample: Accept NAT
+-A FORWARD -d 172.17.2.2 -p tcp --dport 80 -j ACCEPT
+
+# Log
+-A FORWARD -j LOGING
+
+# CHAIN: OUTPUT ==============================================================
+
+# TODO
+
+# COMMIT ======================================================================
+
+COMMIT
+
+###############################################################################
+# TABLE: NAT                                                                  #
+###############################################################################
+
+*nat
+
+# BASE POLICY =================================================================
+
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+
+# CHAIN: PREROUTING ===========================================================
+
+# Sample: NAT
+-A PREROUTING -d 172.17.1.1 -p tcp --dport 80 -j DNAT --to 172.17.2.2
+
+# CHAIN: POSTROUTING ==========================================================
+
+# Sample: NAT on wan
+-A POSTROUTING -o eth0 -j MASQUERADE
+
+# COMMIT ======================================================================
+
+COMMIT
+
+###############################################################################
