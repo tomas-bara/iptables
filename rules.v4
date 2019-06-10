@@ -40,7 +40,7 @@
 -A INPUT -i eth0 -p tcp --dport 8080 --syn -m conntrack --ctstate NEW -j ACCEPT
 
 # Sample: Accept UDP
--A INPUT -i eth0 -p udp --dport 8080 -m conntrack -- NEW -j ACCEPT
+-A INPUT -i eth0 -p udp --dport 8080 -m conntrack --ctstate NEW -j ACCEPT
 
 # Log
 -A INPUT -j LOGING
